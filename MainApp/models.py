@@ -19,7 +19,8 @@ class Transaction(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     transaction_id = models.CharField(max_length=8, unique=True)
 
-    def generate_unique_transaction_id(self):
+    @staticmethod
+    def generate_unique_transaction_id():
         # Define a function to generate a unique transaction ID
         length = 8  # Length of the transaction ID
         timestamp = str(int(datetime.timestamp(datetime.now())))  # Get current timestamp
