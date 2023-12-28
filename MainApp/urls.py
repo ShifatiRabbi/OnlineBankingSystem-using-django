@@ -12,7 +12,8 @@ urlpatterns = [
     path('see_all_customers/', views.see_all_customers, name='see_all_customers'),
     path('see_all_transactions/', views.see_all_transactions, name='see_all_transactions'),
     path('add_customer/', views.add_customer, name='add_customer'),
-    path('update_customer/<int:customer_id>/', views.update_customer, name='update_customer'),
+    path('update_customer/<int:customer_id>/', views.update_profile, name='update_customer'),
+    path('add_money/<int:customer_id>/', views.add_money, name='add_money'),
     path('delete_customer/<int:customer_id>/', views.delete_customer, name='delete_customer'),
     
 
