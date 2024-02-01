@@ -18,14 +18,17 @@ urlpatterns = [
     
 
     path('customer_dashboard/', views.customer_dashboard, name='customer_dashboard'),
-    path('update_profile/', views.update_profile, name='update_profile'),
+    #path('update_profile/', views.update_profile, name='update_profile'),
     path('transaction_details/<int:customer_id>/', views.customer_transaction, name='transaction_details'),
     path('money_transfer/', views.money_transfer, name='money_transfer'),
-    path('add_money/', views.add_money, name='add_money'),
     path('chat_with_admin/', views.chat_with_admin, name='chat_with_admin'),
 
     # Add more URL patterns for other functionalities if needed
     path('login/', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     path('logout/', views.logout_view, name='logout'),
     path('custom_login/', views.custom_login, name='custom_login'),
+
+    path('inbox/', views.inbox, name='inbox'),
+    path('sentbox/', views.sentbox, name='sentbox'),
+    path('send_message/<slug:username>/', views.send_message, name='send_message'),
 ]

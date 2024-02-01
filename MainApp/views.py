@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import UserProfile, Transaction
+from .models import UserProfile, Transaction, Message
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth import views as auth_views
-from .forms import CustomerCreationForm, ProfileUpdateForm,MoneyTransferForm, AddMoneyForm
+from .forms import CustomerCreationForm, ProfileUpdateForm,MoneyTransferForm, AddMoneyForm, MessageForm
 from django.contrib.auth import logout
 from .models import UserProfile, Transaction
 
@@ -19,9 +19,6 @@ def see_all_customers(request):
     customers = UserProfile.objects.all()
     return render(request, 'see_all_customers.html', {'customers': customers})
 
-def see_all_transactions(request):
-    # Logic to retrieve and display all transactions
-    pass
 
 
 #@login_required
@@ -86,7 +83,7 @@ def customer_transaction(request, customer_id):
 
     return render(request, 'customer_transaction.html', {'user_transactions': user_transactions})
 
-def see_all_transaction(request):
+def see_all_transactions(request):
     if request.user.is_superuser:  # Check if the user is an admin
         all_transactions = Transaction.objects.all().order_by('-date')  # Retrieve all transactions
         return render(request, 'see_all_transaction.html', {'all_transactions': all_transactions})
@@ -96,81 +93,7 @@ def see_all_transaction(request):
         return render(request, 'admin_dashboard.html', {'message': 'You are not authorized to view this page'})
     
 
-#@login_required
-"""def update_customer(request, customer_id):
-    customer = get_object_or_404(UserProfile, id=customer_id)
-    if request.method == 'POST':
-        form = CustomerUpdateForm(request.POST, instance=customer)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Customer details updated successfully!')
-            return redirect('see_all_customers')  # Redirect to see_all_customers after successful update
-    else:
-        form = CustomerUpdateForm(instance=customer)
-    
-    return render(request, 'update_customer.html', {'form': form, 'customer': customer})"""
 
-"""
-
-@login_required
-def send_money(request):
-    # Logic to send money to a customer account
-    if request.method == 'POST':
-        # Handle form data and process the money transfer
-        # Update sender and receiver account balances
-        # Create a transaction record
-        # Redirect to admin dashboard or display success/error messages
-        pass  # Your implementation here
-    return render(request, 'send_money.html', context)
-
-@login_required
-def view_transactions(request, user_id):
-    # Logic to view all transactions for a specific user
-    # Fetch transactions based on user_id
-    return render(request, 'view_transactions.html', context)
-
-# Customer Views
-@login_required
-def customer_dashboard(request):
-    # Logic to display customer dashboard
-    # Fetch user details, transactions, etc.
-    return render(request, 'customer_dashboard.html', context)
-
-@login_required
-def update_profile(request):
-    # Logic to update customer profile
-    if request.method == 'POST':
-        # Handle form data and update customer profile
-        # Redirect to customer dashboard or display success/error messages
-        pass  # Your implementation here
-    return render(request, 'update_profile.html', context)
-
-@login_required
-def view_own_transactions(request):
-    # Logic to view own transactions
-    # Fetch transactions for the logged-in customer
-    return render(request, 'view_own_transactions.html', context)
-
-@login_required
-def send_money_to_customer(request):
-    # Logic to send money to another customer's account
-    if request.method == 'POST':
-        # Handle form data and process the money transfer
-        # Update sender and receiver account balances
-        # Create a transaction record
-        # Redirect to customer dashboard or display success/error messages
-        pass  # Your implementation here
-    return render(request, 'send_money_to_customer.html', context)
-
-@login_required
-def request_zakat(request):
-    # Logic to calculate and process zakat request
-    # Calculate based on one year's transaction history
-    # Display zakat amount or error messages
-    return render(request, 'request_zakat.html', context)
-
-# Real-Time Chat Views (if using Django Channels or similar)
-# Implement chat functionality for both admin and customers"""
 #******************** || Customer Views || **********************
 def custom_login(request):
     if request.user.is_authenticated:
@@ -191,30 +114,21 @@ def customer_dashboard(request):
     return render(request, 'customer_dashboard.html', {'user': user})
 
 @login_required
-def update_profile(request):
-    user = request.user.userprofile  # Assuming UserProfile is related to User model
+def update_profile(request, customer_id):
+    user = get_object_or_404(UserProfile, id=customer_id)  # Assuming UserProfile is related to User model
     if request.method == 'POST':
         form = ProfileUpdateForm(request.POST, instance=user)
         if form.is_valid():
             form.save()
-            return redirect('customer_dashboard')  # Redirect after successful update
+            if request.user.is_superuser:  # Check if the user is an admin
+                return redirect('admin_dashboard')  # Redirect to admin dashboard
+            else:
+                return redirect('customer_dashboard')  # Redirect to customer dashboard  # Redirect after successful update
     else:
         form = ProfileUpdateForm(instance=user)
     
     return render(request, 'update_profile.html', {'form': form})
-"""
-def update_profile(request):
-    user_profile = request.user # Assuming UserProfile is related to User model
-    if request.method == 'POST':
-        form = ProfileUpdateForm(request.POST, instance=user_profile)
-        if form.is_valid():
-            form.save()
-            return redirect('customer_dashboard')  # Redirect after successful update
-    else:
-        form = ProfileUpdateForm(instance=user_profile)
-    
-    return render(request, 'update_profile.html', {'form': form})
-"""
+
 
 @login_required
 def money_transfer(request):
@@ -262,5 +176,39 @@ def money_transfer(request):
 
     return render(request, 'money_transfer.html', {'form': form})
 
+# ******************** CHATTING ******************************
 def chat_with_admin(request):
     pass
+
+@login_required
+def send_message(request, username):
+    #recipient = get_object_or_404(User, username=username)
+    if request.method == 'POST':
+        #form = MessageForm(request.POST)
+        recipient = request.POST['recipient']
+        subject = request.POST['subject']
+        body = request.POST['body']
+        
+        receiver = get_object_or_404(User, id=recipient)
+        message = Message(receiver=receiver, subject=subject, body=body, sender=request.user)
+        message.save()
+        messages.success(request, 'Your message has been sent.')
+        return redirect('sentbox')
+    else:
+        form = MessageForm()
+    context = {'form': form, 'users': User.objects.all}
+    return render(request, 'send_message.html', context)
+
+@login_required
+def inbox(request):
+    cnt = Message.objects.filter(receiver=request.user).count()
+    messages = Message.objects.filter(receiver=request.user)
+    context = {'messages': messages, 'cnt': cnt}
+    return render(request, 'inbox.html', context)
+
+@login_required
+def sentbox(request):
+    messages = Message.objects.filter(sender=request.user)
+    context = {'messages': messages}
+    return render(request, 'sentbox.html', context)
+

@@ -2,9 +2,37 @@
 
 {% block content %}
     <h2 class="head-center">Add New Customer</h2>
-    <form method="post">
+    <div class="container">
+
+    
+    <form method="POST">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Add Customer</button>
+        <div class="card-body">
+    
+            {% for field in form %}
+            <div class="form-group" style="margin: 10px;">
+                {{ field.errors }}
+                {{ field.label_tag}}
+                {{ field }}
+            </div>
+            {% endfor %}
+            
+    
+    
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary btn-block">Add Customer</button>
+            </div>
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        <p class="messages alert alert-success" >{{ message }}</p>
+                    {% endif %}
+                    {% if message.tags == 'error' %}
+                        <p class="messages alert alert-danger" >{{ message }}</p>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
     </form>
+</div>
 {% endblock %}
